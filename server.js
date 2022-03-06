@@ -41,7 +41,7 @@ const nearestColor = require('nearest-color').from(colors)
 const upload = multer({ storage: storage })
 
 // settings
-const taille = 18
+const taille = 14
 const pas = 1
 
 
@@ -56,23 +56,27 @@ app.post('/image', upload.single('image'), async (req, res) => {
 
     if (!req['file']['filename']) { return }
 
+    let script = 'from kandinsky import *\nfill_rect(0,0,320,222,color(255,255,255))'
+
+    /*
     let script = 'from kandinsky import *\nfill_rect(0,0,320,222,color(255,255,255))\na=color(0,0,0)\nb=color(255,255,255)\nc=color(255,0,0)\nd=color(0,255,0)\ne=color(0,0,255)\nf=color(255,255,0)\ng=color(0,255,255)\nh=color(255,0,255)\ni=color(192,192,192)\nj=color(128,128,128)\nk=color(128,0,0)\nl=color(128,128,0)\nm=color(0,128,0)\nn=color(128,0,128)\no=color(0,128,128)\np=color(0,0,128)'
+    */
 
     let image = []
     jimp.read('img_upload/' + req['file']['filename'], (err, img) => {
         img.scaleToFit(taille, jimp.AUTO, jimp.RESIZE_BEZIER) // redimensionne et garde le ratio
         for (i = 0; i < img.bitmap.width; i += pas) {
-            for (j = 0; j < taille; j += pas+1) {
+            for (j = 0; j < taille; j += pas) {
 
 
-                
+                /*
                 let res = jimp.intToRGBA(img.getPixelColor(i, j))
                 let couleur = nearestColor(res)
                 res['couleur'] = couleur['name']
-              
-                /*
-                let res = jimp.intToRGBA(img.getPixelColor(i, j))
                 */
+                
+                let res = jimp.intToRGBA(img.getPixelColor(i, j))
+                
                 
                 
                 
@@ -87,10 +91,11 @@ app.post('/image', upload.single('image'), async (req, res) => {
         }
         for (i = 0; i < image.length; i++) {
             
-            script += `\nset_pixel(${image[i]['x']},${image[i]['y']},${image[i]['couleur']})`
             /*
-            script += `\nset_pixel(${image[i]['x']},${image[i]['y']},color(${image[i]['r']},${image[i]['g']},${image[i]['b']}))`
+            script += `\nset_pixel(${image[i]['x']},${image[i]['y']},${image[i]['couleur']})`
             */
+            script += `\nset_pixel(${image[i]['x']},${image[i]['y']},color(${image[i]['r']},${image[i]['g']},${image[i]['b']}))`
+            
         }
         res.sendFile(__dirname + '/public/index.html')
         fs.writeFile('scripts/' + req['file']['filename'] + '.py', script, () => { })
